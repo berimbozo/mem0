@@ -37,7 +37,6 @@ DEFAULT_CONFIG = {
         "provider": LLM_PROVIDER,
         "config": {
             "model": LLM_MODEL,
-            "temperature": 0.2,
         },
     },
     "embedder": {
