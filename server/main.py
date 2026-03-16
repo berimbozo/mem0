@@ -76,6 +76,25 @@ app = FastAPI(
     version="1.0.0",
 )
 
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse as StarletteJSONResponse
+
+MEM0_API_KEY = os.environ.get("MEM0_API_KEY")
+
+class AuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        if request.url.path in ("/", "/docs", "/openapi.json", "/docs/oauth2-redirect"):
+            return await call_next(request)
+        if MEM0_API_KEY:
+            auth_header = request.headers.get("Authorization")
+            if not auth_header or auth_header != f"Bearer {MEM0_API_KEY}":
+                return StarletteJSONResponse(
+                    status_code=401,
+                    content={"detail": "Invalid or missing API key"},
+                )
+        return await call_next(request)
+
+app.add_middleware(AuthMiddleware)
 
 class Message(BaseModel):
     role: str = Field(..., description="Role of the message (user or assistant).")
