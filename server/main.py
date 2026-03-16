@@ -37,6 +37,7 @@ DEFAULT_CONFIG = {
         "provider": LLM_PROVIDER,
         "config": {
             "model": LLM_MODEL,
+            "top_p": 0.9,
         },
     },
     "embedder": {
