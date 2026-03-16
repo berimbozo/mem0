@@ -59,16 +59,14 @@ if ENABLE_GRAPH:
     }
 
 # Workaround: mem0 sends both temperature and top_p to Anthropic, which rejects it.
-from mem0.llms.anthropic import AnthropicLLM
-_original_generate = AnthropicLLM.generate_response
+import anthropic as _anthropic
+_original_create = _anthropic.resources.messages.Messages.create
 
-def _patched_generate(self, messages, **kwargs):
+def _patched_create(self, **kwargs):
     kwargs.pop("top_p", None)
-    if hasattr(self, 'config') and hasattr(self.config, 'top_p'):
-        self.config.top_p = None
-    return _original_generate(self, messages, **kwargs)
+    return _original_create(self, **kwargs)
 
-AnthropicLLM.generate_response = _patched_generate
+_anthropic.resources.messages.Messages.create = _patched_create
 
 MEMORY_INSTANCE = Memory.from_config(DEFAULT_CONFIG)
 
