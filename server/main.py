@@ -37,7 +37,6 @@ DEFAULT_CONFIG = {
         "provider": LLM_PROVIDER,
         "config": {
             "model": LLM_MODEL,
-            "top_p": 0.9,
         },
     },
     "embedder": {
@@ -58,6 +57,18 @@ if ENABLE_GRAPH:
         "provider": "neo4j",
         "config": {"url": NEO4J_URI, "username": NEO4J_USERNAME, "password": NEO4J_PASSWORD},
     }
+
+# Workaround: mem0 sends both temperature and top_p to Anthropic, which rejects it.
+from mem0.llms.anthropic import AnthropicLLM
+_original_generate = AnthropicLLM.generate_response
+
+def _patched_generate(self, messages, **kwargs):
+    kwargs.pop("top_p", None)
+    if hasattr(self, 'config') and hasattr(self.config, 'top_p'):
+        self.config.top_p = None
+    return _original_generate(self, messages, **kwargs)
+
+AnthropicLLM.generate_response = _patched_generate
 
 MEMORY_INSTANCE = Memory.from_config(DEFAULT_CONFIG)
 
